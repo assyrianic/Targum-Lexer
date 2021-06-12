@@ -1,0 +1,3 @@
+int main(int argc, char *argv[restrict static 3e3]) {
+	puts(argv[0]);
+}
