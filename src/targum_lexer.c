@@ -164,7 +164,7 @@ TARGUM_API struct TargumTokenInfo *targum_lexer_advance(struct TargumLexer *cons
 {
 	if( lexer->cfg==NULL || lexer->tokens.len==0 ) {
 		return lexer->curr_tok;
-	
+	}
 	if( lexer->index < lexer->tokens.len ) {
 		lexer->curr_tok = harbol_array_get(&lexer->tokens, lexer->index++, sizeof *lexer->curr_tok);
 	} else {
@@ -535,6 +535,7 @@ TARGUM_API bool targum_lexer_remove_whitespace(struct TargumLexer *const lexer)
 		harbol_cfg_get_int(whitespace, "tab"),
 		harbol_cfg_get_int(whitespace, "newline")
 	};
+	
 	for( const intmax_t *const *iter=&whitespaces[0]; iter<1[&whitespaces]; iter++ ) {
 		if( *iter==NULL ) {
 			continue;
