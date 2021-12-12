@@ -9,7 +9,7 @@ extern "C" {
 #include "cfg/cfg.h"
 
 #define TARGUM_LEXER_VERSION_MAJOR    1
-#define TARGUM_LEXER_VERSION_MINOR    1
+#define TARGUM_LEXER_VERSION_MINOR    2
 #define TARGUM_LEXER_VERSION_PATCH    0
 #define TARGUM_LEXER_VERSION_RELEASE  "beta"
 #define STR_HELPER(x)                 #x
@@ -50,8 +50,8 @@ TARGUM_API NO_NULL uint32_t targum_token_info_get_token(const struct TargumToken
 
 
 struct TargumLexer {
-	struct HarbolArray     tokens;
-	struct HarbolString    filename, src;
+	struct HarbolArray      tokens;
+	struct HarbolString     filename, src;
 	struct HarbolMap       *cfg;
 	char                   *iter, *line_start;
 	size_t                  line, index, err_count;

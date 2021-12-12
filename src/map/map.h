@@ -6,14 +6,13 @@ extern "C" {
 #endif
 
 #include "../array/array.h"
-#include "../str/str.h"
 
 
 /// ordered hash table.
 struct HarbolMap {
 	struct HarbolArray *buckets;
 	uint8_t           **datum, **keys;
-	size_t             *hashes, *keylens, cap, len;
+	size_t             *hashes, *keylens, cap, len, seed;
 };
 
 

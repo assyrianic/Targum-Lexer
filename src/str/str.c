@@ -211,7 +211,12 @@ HARBOL_EXPORT bool harbol_string_read_from_file(struct HarbolString *const str, 
 
 HARBOL_EXPORT bool harbol_string_read_file(struct HarbolString *const restrict str, const char filename[static 1]) {
 	FILE *restrict file = fopen(filename, "r");
-	return( file==NULL ) ? false : harbol_string_read_from_file(str, file);
+	if( file==NULL )
+		return false;
+	
+	const bool read_result = harbol_string_read_from_file(str, file);
+	fclose(file);
+	return read_result;
 }
 
 HARBOL_EXPORT bool harbol_string_replace(struct HarbolString *const str, const char to_replace, const char with) {
@@ -277,10 +282,24 @@ HARBOL_EXPORT bool harbol_string_reverse(struct HarbolString *const str) {
 	bool got_something = false;
 	const size_t half_len = str->len / 2;
 	for( size_t i=0, n=str->len-1; i<half_len; i++, n-- ) {
-		const int t = str->cstr[i];
+		const int_fast8_t t = str->cstr[i];
 		str->cstr[i] = str->cstr[n];
 		str->cstr[n] = t;
 		got_something |= true;
 	}
 	return got_something;
+}
+
+
+HARBOL_EXPORT size_t harbol_string_rm_char(struct HarbolString *const str, const char c) {
+	size_t j = 0, counts = 0;
+	for( size_t i=0; str->cstr[i] != 0; i++ ) {
+		if( str->cstr[i] != c ) {
+			str->cstr[j++] = str->cstr[i];
+		} else {
+			counts++;
+		}
+	}
+	str->cstr[j] = 0;
+	return counts;
 }

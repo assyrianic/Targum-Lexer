@@ -83,7 +83,7 @@ HARBOL_EXPORT void harbol_array_cleanup(struct HarbolArray **const vecref) {
 
 /// array info getters.
 HARBOL_EXPORT void *const *harbol_array_data(const struct HarbolArray *const vec) {
-	return ( void *const * )&vec->table;
+	return ( void *const * )(&vec->table);
 }
 HARBOL_EXPORT size_t harbol_array_cap(const struct HarbolArray *const vec) {
 	return vec->cap;
@@ -238,7 +238,7 @@ HARBOL_EXPORT bool harbol_array_swap(struct HarbolArray *const vec, const size_t
 		for( size_t x=0; x<datasize; x++ ) {
 			const size_t i_offs = (i * datasize) + x;
 			const size_t n_offs = (n * datasize) + x;
-			const int data = vec->table[n_offs];
+			const uint_fast8_t data = vec->table[n_offs];
 			vec->table[n_offs] = vec->table[i_offs];
 			vec->table[i_offs] = data;
 		}

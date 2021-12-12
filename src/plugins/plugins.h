@@ -103,7 +103,6 @@ struct HarbolPlugin {
 
 typedef void HarbolPluginEvent(struct HarbolPlugin *pl_ctxt, void *userdata, bool reloading);
 
-
 HARBOL_EXPORT NEVER_NULL(1,2) bool harbol_plugin_load(struct HarbolPlugin *pl, const char path[], HarbolPluginEvent load_fn, void *userdata);
 
 HARBOL_EXPORT NEVER_NULL(1) void harbol_plugin_clear(struct HarbolPlugin *pl, HarbolPluginEvent unload_fn, void *userdata);
@@ -118,7 +117,6 @@ HARBOL_EXPORT NO_NULL void *harbol_plugin_get_obj(struct HarbolPlugin *pl, const
 
 
 typedef void HarbolPluginDirEvent(const char pl_path[], const char pl_name[], void *userdata);
-
 
 HARBOL_EXPORT NEVER_NULL(1) bool harbol_plugin_dir_open(const char dir[], HarbolPluginDirEvent dir_fn, void *userdata, const char custom_ext[]);
 
