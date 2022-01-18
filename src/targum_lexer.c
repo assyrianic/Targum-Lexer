@@ -264,7 +264,7 @@ TARGUM_API bool targum_lexer_generate_tokens(struct TargumLexer *const lexer)
 			"string",
 			"rune",
 		};
-		for( const char **iter=&names[0]; iter<1[&names]; iter++ ) {
+		for( const char **iter = &names[0]; iter < 1[&names]; iter++ ) {
 			if( harbol_cfg_get_int(tokens, *iter)==NULL ) {
 				harbol_err_msg(&lexer->err_count, lexer->filename.cstr, "critical error", NULL, NULL, "Missing '%s' key in config file! Failed to generate tokens.", *iter);
 				goto targum_lex_err_exit;
@@ -279,11 +279,10 @@ TARGUM_API bool targum_lexer_generate_tokens(struct TargumLexer *const lexer)
 			return false;
 		}
 		
-		if( max_toks > 0 && token_count >= max_toks )
+		if( max_toks > 0 && token_count >= max_toks ) {
 			return true;
-		
-		/// check white space if they're considered legit tokens.
-		else if( is_whitespace(*lexer->iter) ) {
+		} else if( is_whitespace(*lexer->iter) ) {
+			/// check white space if they're considered legit tokens.
 			const int_fast8_t s = *lexer->iter++;
 			if( s=='\n' ) {
 				lexer->line++;
@@ -291,6 +290,7 @@ TARGUM_API bool targum_lexer_generate_tokens(struct TargumLexer *const lexer)
 			}
 			
 			if( whitespace != NULL ) {
+				/// TODO: "merge" continuous whitespace into one token?
 				const char *whitespace_key = NULL;
 				switch( s ) {
 					case ' ' : whitespace_key = "space";   break;
@@ -301,12 +301,19 @@ TARGUM_API bool targum_lexer_generate_tokens(struct TargumLexer *const lexer)
 				if( token_value != NULL ) {
 					struct TargumTokenInfo tok = {
 						.start    = ( uintptr_t )(lexer->iter - lexer->src.cstr),
-						.end      = ( uintptr_t )(lexer->iter - lexer->src.cstr + 1),
 						.col      = ( uintptr_t )(lexer->iter - lexer->line_start),
 						.line     = lexer->line,
 						.filename = &lexer->filename,
 						.tag      = *token_value
 					};
+					while( *lexer->iter==s ) {
+						lexer->iter++;
+						if( s=='\n' ) {
+							lexer->line++;
+							lexer->line_start = lexer->iter;
+						}
+					}
+					tok.end = ( uintptr_t )(lexer->iter - lexer->src.cstr + 1);
 					harbol_string_add_char(&tok.lexeme, s);
 					harbol_array_insert(&lexer->tokens, &tok, sizeof tok);
 					token_count++;
@@ -372,7 +379,7 @@ TARGUM_API bool targum_lexer_generate_tokens(struct TargumLexer *const lexer)
 					if( !strncmp(lexer->iter, ( const char* )comments->keys[i], comments->keylens[i]-1) ) {
 						const struct HarbolString *const end_comment = harbol_cfg_get_str(comments, ( const char* )comments->keys[i]);
 						if( !lex_comments ) {
-							lexer->iter = ( end_comment==NULL || end_comment->len==0 )? ( char* )(skip_single_line_comment(lexer->iter)) : ( char* )(skip_multi_line_comment(lexer->iter, end_comment->cstr, end_comment->len));
+							lexer->iter = ( end_comment==NULL || end_comment->len==0 )? ( char* )(skip_single_line_comment(lexer->iter, &lexer->line)) : ( char* )(skip_multi_line_comment(lexer->iter, end_comment->cstr, end_comment->len, &lexer->line));
 							got_something = true;
 							break;
 						}
@@ -385,8 +392,8 @@ TARGUM_API bool targum_lexer_generate_tokens(struct TargumLexer *const lexer)
 						};
 						tok.tag = *harbol_cfg_get_int(tokens, "comment");
 						const bool result = ( end_comment==NULL || end_comment->len==0 )
-								? lex_single_line_comment(lexer->iter, ( const char** )(&lexer->iter), &tok.lexeme)
-								: lex_multi_line_comment(lexer->iter, ( const char** )(&lexer->iter), end_comment->cstr, end_comment->len, &tok.lexeme);
+								? lex_single_line_comment(lexer->iter, ( const char** )(&lexer->iter), &tok.lexeme, &lexer->line)
+								: lex_multi_line_comment(lexer->iter, ( const char** )(&lexer->iter), end_comment->cstr, end_comment->len, &tok.lexeme, &lexer->line);
 						
 						if( !result ) {
 							harbol_err_msg(&lexer->err_count, lexer->filename.cstr, "error", &lexer->line, &( const size_t ){ ( uintptr_t )(lexer->iter - lexer->line_start) }, "invalid %s comment!", ( end_comment==NULL || end_comment->len==0 ) ? "single-line" : "multi-line");
@@ -536,7 +543,7 @@ TARGUM_API bool targum_lexer_remove_whitespace(struct TargumLexer *const lexer)
 		harbol_cfg_get_int(whitespace, "newline")
 	};
 	
-	for( const intmax_t *const *iter=&whitespaces[0]; iter<1[&whitespaces]; iter++ ) {
+	for( const intmax_t *const *iter = &whitespaces[0]; iter < 1[&whitespaces]; iter++ ) {
 		if( *iter==NULL ) {
 			continue;
 		} else {
