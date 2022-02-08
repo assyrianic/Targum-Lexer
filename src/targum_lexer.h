@@ -91,6 +91,8 @@ TARGUM_API NO_NULL bool targum_lexer_remove_token(struct TargumLexer *lexer, uin
 TARGUM_API NO_NULL bool targum_lexer_remove_comments(struct TargumLexer *lexer);
 TARGUM_API NO_NULL bool targum_lexer_remove_whitespace(struct TargumLexer *lexer);
 
+TARGUM_API NO_NULL bool targum_lexer_purge_line(struct TargumLexer *lexer, size_t line);
+
 
 #ifdef __cplusplus
 }

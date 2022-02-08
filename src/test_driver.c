@@ -14,7 +14,7 @@ int main(const int argc, char *restrict argv[restrict static 1])
 		struct TargumLexer lexer = targum_lexer_make_from_file(argv[1], NULL, &( bool ){false});
 		assert( targum_lexer_load_cfg_file(&lexer, "tokens.cfg") && "failed to load tokens.cfg!" );
 		const bool result = targum_lexer_generate_tokens(&lexer);
-		printf("tokenization? '%s'\n", result ? "success!" : "failure!");
+		printf("tokenization? '%s' | number of tokens:: %zu, ending line: '%zu' - '%c'\n", result ? "success!" : "failure!", lexer.src.len, lexer.line, lexer.iter[0]);
 		const bool interactive = (argv[2] != NULL && !strcmp(argv[2], "--interactive")) || lexer.src.len > 6000; /// force interactive mode if massive file.
 		if( interactive ) {
 			char controller = 0;

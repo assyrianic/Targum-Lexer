@@ -157,7 +157,7 @@ TARGUM_API struct TargumTokenInfo *targum_lexer_get_token(const struct TargumLex
 
 TARGUM_API struct TargumTokenInfo *targum_lexer_peek_token(const struct TargumLexer *const lexer, const size_t lookahead)
 {
-	return harbol_array_get(&lexer->tokens, ( (lexer->index + lookahead) >= lexer->tokens.len ) ? lexer->tokens.len - 1 : lexer->index + lookahead, sizeof *lexer->curr_tok);
+	return harbol_array_get(&lexer->tokens, ( (lexer->index + lookahead) >= lexer->tokens.len )? lexer->tokens.len - 1 : lexer->index + lookahead, sizeof *lexer->curr_tok);
 }
 
 TARGUM_API struct TargumTokenInfo *targum_lexer_advance(struct TargumLexer *const lexer, const bool flush_old_tokens)
@@ -290,7 +290,6 @@ TARGUM_API bool targum_lexer_generate_tokens(struct TargumLexer *const lexer)
 			}
 			
 			if( whitespace != NULL ) {
-				/// TODO: "merge" continuous whitespace into one token?
 				const char *whitespace_key = NULL;
 				switch( s ) {
 					case ' ' : whitespace_key = "space";   break;
@@ -351,13 +350,12 @@ TARGUM_API bool targum_lexer_generate_tokens(struct TargumLexer *const lexer)
 			};
 			bool is_float = false;
 			char *end = NULL;
-			const int lex_result = ( golang_style ? lex_go_style_number : lex_c_style_number )(( const char* )lexer->iter, ( const char** )&end, &tok.lexeme, &is_float);
-			if( lex_result > HarbolLexNoErr && !dot ) {
-				harbol_err_msg(&lexer->err_count, lexer->filename.cstr, "error", &lexer->line, &( const size_t ){ ( uintptr_t )(lexer->iter - lexer->line_start) }, "invalid number: %s", lex_get_err
-				(lex_result));
+			const int lex_result = ( golang_style? lex_go_style_number : lex_c_style_number )(lexer->iter, ( const char** )(&end), &tok.lexeme, &is_float);
+			if( lex_result != HarbolLexNoErr && !dot ) {
+				harbol_err_msg(&lexer->err_count, lexer->filename.cstr, "error", &lexer->line, &( const size_t ){ ( uintptr_t )(lexer->iter - lexer->line_start) }, "invalid number: %s - '%s'", lex_get_err(lex_result), tok.lexeme.cstr);
 				harbol_string_clear(&tok.lexeme);
 				goto targum_lex_err_exit;
-			} else if( lex_result > HarbolLexNoErr && dot ) {
+			} else if( lex_result != HarbolLexNoErr && dot ) {
 				/// invalid number, jump to the operators section.
 				harbol_string_clear(&tok.lexeme);
 				goto check_operators;
@@ -366,7 +364,7 @@ TARGUM_API bool targum_lexer_generate_tokens(struct TargumLexer *const lexer)
 					lexer->iter = end;
 				}
 				tok.end = ( uintptr_t )(lexer->iter - lexer->src.cstr);
-				tok.tag = ( uint32_t )(*harbol_cfg_get_int(tokens, is_float ? "float" : "integer"));
+				tok.tag = ( uint32_t )(*harbol_cfg_get_int(tokens, is_float? "float" : "integer"));
 				harbol_array_insert(&lexer->tokens, &tok, sizeof tok);
 				token_count++;
 			}
@@ -376,8 +374,8 @@ TARGUM_API bool targum_lexer_generate_tokens(struct TargumLexer *const lexer)
 			if( comments != NULL ) {
 				bool got_something = false;
 				for( size_t i=0; i < comments->len; i++ ) {
-					if( !strncmp(lexer->iter, ( const char* )comments->keys[i], comments->keylens[i]-1) ) {
-						const struct HarbolString *const end_comment = harbol_cfg_get_str(comments, ( const char* )comments->keys[i]);
+					if( !strncmp(lexer->iter, ( const char* )(comments->keys[i]), comments->keylens[i]-1) ) {
+						const struct HarbolString *const end_comment = harbol_cfg_get_str(comments, ( const char* )(comments->keys[i]));
 						if( !lex_comments ) {
 							lexer->iter = ( end_comment==NULL || end_comment->len==0 )? ( char* )(skip_single_line_comment(lexer->iter, &lexer->line)) : ( char* )(skip_multi_line_comment(lexer->iter, end_comment->cstr, end_comment->len, &lexer->line));
 							got_something = true;
@@ -391,14 +389,18 @@ TARGUM_API bool targum_lexer_generate_tokens(struct TargumLexer *const lexer)
 							.filename = &lexer->filename
 						};
 						tok.tag = *harbol_cfg_get_int(tokens, "comment");
-						const bool result = ( end_comment==NULL || end_comment->len==0 )
-								? lex_single_line_comment(lexer->iter, ( const char** )(&lexer->iter), &tok.lexeme, &lexer->line)
-								: lex_multi_line_comment(lexer->iter, ( const char** )(&lexer->iter), end_comment->cstr, end_comment->len, &tok.lexeme, &lexer->line);
+						char *end = NULL;
+						const bool result = ( end_comment==NULL || end_comment->len==0 )?
+								lex_single_line_comment(lexer->iter, ( const char** )(&end), &tok.lexeme, &lexer->line)
+								: lex_multi_line_comment(lexer->iter, ( const char** )(&end), end_comment->cstr, end_comment->len, &tok.lexeme, &lexer->line);
 						
 						if( !result ) {
-							harbol_err_msg(&lexer->err_count, lexer->filename.cstr, "error", &lexer->line, &( const size_t ){ ( uintptr_t )(lexer->iter - lexer->line_start) }, "invalid %s comment!", ( end_comment==NULL || end_comment->len==0 ) ? "single-line" : "multi-line");
+							harbol_err_msg(&lexer->err_count, lexer->filename.cstr, "error", &lexer->line, &( const size_t ){ ( uintptr_t )(lexer->iter - lexer->line_start) }, "invalid %s comment! - '%s'", ( end_comment==NULL || end_comment->len==0 )? "single-line" : "multi-line", tok.lexeme.cstr);
 							harbol_string_clear(&tok.lexeme);
 							goto targum_lex_err_exit;
+						}
+						if( end != NULL ) {
+							lexer->iter = end;
 						}
 						tok.end = ( uintptr_t )(lexer->iter - lexer->src.cstr);
 						harbol_array_insert(&lexer->tokens, &tok, sizeof tok);
@@ -407,8 +409,9 @@ TARGUM_API bool targum_lexer_generate_tokens(struct TargumLexer *const lexer)
 						break;
 					}
 				}
-				if( got_something )
+				if( got_something ) {
 					continue;
+				}
 			}
 			
 			/// placing this code here so we don't glitch out "string-like" comments.
@@ -421,14 +424,18 @@ TARGUM_API bool targum_lexer_generate_tokens(struct TargumLexer *const lexer)
 					.line     = lexer->line,
 					.filename = &lexer->filename
 				};
-				const int lex_result = ( golang_style? lex_go_style_str : lex_c_style_str )(( const char* )(lexer->iter), ( const char** )(&lexer->iter), &tok.lexeme);
+				char *end = NULL;
+				const int lex_result = ( golang_style? lex_go_style_str : lex_c_style_str )(lexer->iter, ( const char** )(&end), &tok.lexeme);
 				if( lex_result > HarbolLexNoErr ) {
-					harbol_err_msg(&lexer->err_count, lexer->filename.cstr, "error", &lexer->line, &( const size_t ){ ( uintptr_t )(lexer->iter - lexer->line_start) }, (quote=='"' || (golang_style && quote=='`')) ? "invalid string! %s" : "invalid rune! %s", lex_get_err(lex_result));
+					harbol_err_msg(&lexer->err_count, lexer->filename.cstr, "error", &lexer->line, &( const size_t ){ ( uintptr_t )(lexer->iter - lexer->line_start) }, (quote=='"' || (golang_style && quote=='`'))? "invalid string! %s - '%s'" : "invalid rune! %s - '%s'", lex_get_err(lex_result), tok.lexeme.cstr);
 					harbol_string_clear(&tok.lexeme);
 					goto targum_lex_err_exit;
 				}
+				if( end != NULL ) {
+					lexer->iter = end;
+				}
 				tok.end = ( uintptr_t )(lexer->iter - lexer->src.cstr);
-				tok.tag = (quote=='"' || (golang_style && quote=='`')) ? *harbol_cfg_get_int(tokens, "string") : *harbol_cfg_get_int(tokens, "rune");
+				tok.tag = (quote=='"' || (golang_style && quote=='`'))? *harbol_cfg_get_int(tokens, "string") : *harbol_cfg_get_int(tokens, "rune");
 				harbol_array_insert(&lexer->tokens, &tok, sizeof tok);
 				token_count++;
 				continue;
@@ -453,7 +460,7 @@ TARGUM_API bool targum_lexer_generate_tokens(struct TargumLexer *const lexer)
 						.filename = &lexer->filename
 					};
 					const struct HarbolVariant *const v = ( const struct HarbolVariant* )(operators->datum[match]);
-					tok.tag = *( const intmax_t* )v->data;
+					tok.tag = *( const intmax_t* )(v->data);
 					harbol_string_add_cstr(&tok.lexeme, ( const char* )(operators->keys[match]));
 					lexer->iter += operator_size;
 					tok.end = ( uintptr_t )(lexer->iter - lexer->src.cstr);
@@ -548,6 +555,20 @@ TARGUM_API bool targum_lexer_remove_whitespace(struct TargumLexer *const lexer)
 			continue;
 		} else {
 			deleted_something |= targum_lexer_remove_token_type(lexer, **iter);
+		}
+	}
+	return deleted_something;
+}
+
+TARGUM_API bool targum_lexer_purge_line(struct TargumLexer *const lexer, const size_t line) {
+	bool deleted_something = false;
+	for( size_t i=0; i < lexer->tokens.len; i++ ) {
+		struct TargumTokenInfo *const ti = harbol_array_get(&lexer->tokens, i, sizeof *ti);
+		if( ti->line==line ) {
+			harbol_string_clear(&ti->lexeme);
+			harbol_array_del_by_index(&lexer->tokens, i, sizeof *ti);
+			i = 0;
+			deleted_something |= true;
 		}
 	}
 	return deleted_something;
