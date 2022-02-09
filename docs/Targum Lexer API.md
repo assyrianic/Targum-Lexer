@@ -6,19 +6,10 @@
 
 ```c
 struct TargumTokenInfo {
-	struct HarbolString        lexeme;
-	const struct HarbolString *filename;
-	size_t                     start, end, line, col;
-	uint32_t                   tag;
+	size_t   start, end, line, col;
+	uint32_t tag;
 };
 ```
-
-### lexeme
-string object that holds the lexeme of the token.
-
-### filename
-pointer to a string object of the filename the token resides in.
-DO NOT FREE.
 
 ### start
 offset, in the source code, where the token starts at.
@@ -83,52 +74,6 @@ token pointer as pointed to with `TargumLexer::index`.
 
 
 # Functions/Methods
-
-
-## targum_token_info_clear
-```c
-void targum_token_info_clear(struct TargumTokenInfo *tokinfo);
-```
-
-### Description
-clears out the memory of the token info object.
-you'll rarely have to invoke this function yourself as the lexer handles most of token deallocation.
-
-### Parameters
-* `tokinfo` - pointer to token info object.
-
-### Return Value
-None.
-
-
-## targum_token_info_get_lexeme
-```c
-const char *targum_token_info_get_lexeme(const struct TargumTokenInfo *tokinfo);
-```
-
-### Description
-self explanatory.
-
-### Parameters
-* `tokinfo` - pointer to a constant token info object.
-
-### Return Value
-char pointer of the token lexeme.
-
-
-## targum_token_info_get_filename
-```c
-const char *targum_token_info_get_filename(const struct TargumTokenInfo *tokinfo);
-```
-
-### Description
-self explanatory.
-
-### Parameters
-* `tokinfo` - pointer to a constant token info object.
-
-### Return Value
-char pointer of the file name string.
 
 
 ## targum_token_info_get_token
@@ -524,3 +469,19 @@ Only necessary if you set up your language config to tokenize (specific) whitesp
 
 ### Return Value
 true if successful, false otherwise.
+
+
+## targum_lexer_purge_line
+```c
+bool targum_lexer_purge_line(struct TargumLexer *lexer, size_t line);
+```
+
+### Description
+Purges all tokens from a specific line in the source code.
+
+### Parameters
+* `lexer` - pointer to lexer object.
+* `line` - line in the source code.
+
+### Return Value
+true if purged at least one token from the line, false otherwise.

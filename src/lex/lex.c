@@ -464,11 +464,13 @@ HARBOL_EXPORT int lex_c_style_hex(const char str[static 1], const char **const e
 				}
 				break;
 			case '+': case '-':
-				if( !(lit_flags & (exponent_p|flt_dot)) ) { /// bad +/- placement.
+				if( lit_flags & math_op ) {
+					goto lex_c_style_hex_err;
+				} else if( !(lit_flags & (exponent_p|flt_dot)) ) { /// bad +/- placement.
 					harbol_string_add_char(buf, chr);
 					result = HarbolLexBadPlusMinusPlace;
 					goto lex_c_style_hex_err;
-				} else if( !is_decimal(str[1]) ) { /// no number after exponent?
+				} else if( !is_decimal(str[1]) && !(lit_flags & math_op) ) { /// no number after exponent?
 					harbol_string_add_char(buf, chr);
 					result = HarbolLexNoNumAfterExp;
 					goto lex_c_style_hex_err;
@@ -533,6 +535,7 @@ HARBOL_EXPORT int lex_c_style_hex(const char str[static 1], const char **const e
 					goto lex_c_style_hex_err;
 				} else {
 					harbol_string_add_char(buf, chr);
+					lit_flags &= ~digit_sep;
 				}
 				break;
 			case '0': case '1': case '2': case '3': case '4':
@@ -648,7 +651,9 @@ HARBOL_EXPORT int lex_go_style_hex(const char str[static 1], const char **const 
 				}
 				break;
 			case '+': case '-':
-				if( lit_flags & (exponent_p|flt_dot) ) {
+				if( lit_flags & math_op ) {
+					goto lex_go_style_hex_err;
+				} else if( lit_flags & (exponent_p|flt_dot) ) {
 					if( !is_decimal(str[1]) ) { /// no number after exponent?
 						result = HarbolLexNoNumAfterExp;
 						harbol_string_add_char(buf, chr);
@@ -658,7 +663,7 @@ HARBOL_EXPORT int lex_go_style_hex(const char str[static 1], const char **const 
 						harbol_string_add_char(buf, chr);
 					}
 				} else {
-					return result;
+					goto lex_go_style_hex_err;
 				}
 				break;
 			case 'a': case 'b': case 'c': case 'd': case 'e': case 'f':
@@ -1034,7 +1039,9 @@ HARBOL_EXPORT int lex_c_style_decimal(const char str[static 1], const char **con
 				}
 				break;
 			case '-': case '+':
-				if( lit_flags & (flt_e_flag|flt_dot) ) {
+				if( lit_flags & (math_op|got_exp_num) ) {
+					goto lex_c_style_decimal_err;
+				} else if( lit_flags & (flt_e_flag|flt_dot) ) {
 					if( !is_decimal(str[1]) ) { /// no number after exponent?
 						harbol_string_add_char(buf, chr);
 						result = HarbolLexNoNumAfterExp;
@@ -1043,8 +1050,6 @@ HARBOL_EXPORT int lex_c_style_decimal(const char str[static 1], const char **con
 						lit_flags |= math_op;
 						harbol_string_add_char(buf, chr);
 					}
-				} else {
-					return result;
 				}
 				break;
 			case 'F': case 'f':
@@ -1107,7 +1112,7 @@ HARBOL_EXPORT int lex_c_style_decimal(const char str[static 1], const char **con
 					harbol_string_add_char(buf, chr);
 					result = HarbolLexTooManyLs;
 					goto lex_c_style_decimal_err;
-				} else if( lit_flags & (flt_dot|flt_f_flag|flt_e_flag) ) { /// int suffix on float literal.
+				} else if( (lit_flags & (flt_dot|flt_f_flag|flt_e_flag)) && (lit_flags & (long2|uflag)) ) { /// int suffix on float literal.
 					harbol_string_add_char(buf, chr);
 					result = HarbolLexIntSuffixOnFlt;
 					goto lex_c_style_decimal_err;
@@ -1131,8 +1136,8 @@ HARBOL_EXPORT int lex_c_style_decimal(const char str[static 1], const char **con
 					goto lex_c_style_decimal_err;
 				} else {
 					harbol_string_add_char(buf, chr);
+					lit_flags &= ~digit_sep;
 				}
-				lit_flags &= ~digit_sep;
 				break;
 			case DigitSep_C:
 				if( lit_flags & digit_sep ) { /// too many digit seps.
@@ -1197,7 +1202,9 @@ HARBOL_EXPORT int lex_go_style_decimal(const char str[static 1], const char **co
 				}
 				break;
 			case '-': case '+':
-				if( lit_flags & (flt_e_flag|flt_dot) ) {
+				if( lit_flags & math_op ) {
+					goto lex_go_style_decimal_err;
+				} else if( lit_flags & (flt_e_flag|flt_dot) ) {
 					if( !is_decimal(str[1]) ) { /// no number after exponent?
 						harbol_string_add_char(buf, chr);
 						result = HarbolLexNoNumAfterExp;
@@ -1206,8 +1213,6 @@ HARBOL_EXPORT int lex_go_style_decimal(const char str[static 1], const char **co
 						lit_flags |= math_op;
 						harbol_string_add_char(buf, chr);
 					}
-				} else {
-					return result;
 				}
 				break;
 			case 'E': case 'e':

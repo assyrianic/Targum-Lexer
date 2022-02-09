@@ -28,24 +28,16 @@ extern "C" {
 #endif
 
 
-/// const char  **lexeme_ref;
-/// const size_t *len_ref;
 struct TargumTokenInfo {
-	struct HarbolString        lexeme;
-	const struct HarbolString *filename;
-	size_t
+	uint32_t
 		start,  /// start offset of lexeme.
 		end,    /// end offset of lexeme.
 		line,   /// line in source code.
-		col     /// column in source code.
+		col,    /// column in source code.
+		tag
 	;
-	uint32_t tag;
 };
 
-TARGUM_API NO_NULL void targum_token_info_clear(struct TargumTokenInfo *tokinfo);
-
-TARGUM_API NO_NULL NONNULL_RET const char *targum_token_info_get_lexeme(const struct TargumTokenInfo *tokinfo);
-TARGUM_API NO_NULL NONNULL_RET const char *targum_token_info_get_filename(const struct TargumTokenInfo *tokinfo);
 TARGUM_API NO_NULL uint32_t targum_token_info_get_token(const struct TargumTokenInfo *tokinfo);
 
 
@@ -62,7 +54,7 @@ TARGUM_API NEVER_NULL(1) struct TargumLexer *targum_lexer_new_from_buffer(const 
 TARGUM_API NEVER_NULL(1) struct TargumLexer *targum_lexer_new_from_file(const char filename[], struct HarbolMap *cfg);
 
 TARGUM_API NEVER_NULL(1) struct TargumLexer targum_lexer_make_from_buffer(const char src[], struct HarbolMap *cfg);
-TARGUM_API NEVER_NULL(1) struct TargumLexer targum_lexer_make_from_file(const char filename[], struct HarbolMap *cfg, bool *result);
+TARGUM_API NEVER_NULL(1,3) struct TargumLexer targum_lexer_make_from_file(const char filename[], struct HarbolMap *cfg, bool *result);
 
 TARGUM_API NO_NULL void targum_lexer_clear(struct TargumLexer *lexer, bool free_cfg);
 TARGUM_API NO_NULL void targum_lexer_free(struct TargumLexer **lexer_ref, bool free_cfg);
