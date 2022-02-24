@@ -91,6 +91,21 @@ self explanatory.
 unsigned integer representing the token value.
 
 
+## targum_token_info_get_len
+```c
+size_t targum_token_info_get_len(const struct TargumTokenInfo *tokinfo);
+```
+
+### Description
+Gets the string length of the token.
+
+### Parameters
+* `tokinfo` - pointer to a constant token info object.
+
+### Return Value
+size_t integer of the length of the token's string lexeme.
+
+
 ## targum_lexer_new_from_buffer
 ```c
 struct TargumLexer *targum_lexer_new_from_buffer(const char src[], struct HarbolLinkMap *cfg);
@@ -485,3 +500,19 @@ Purges all tokens from a specific line in the source code.
 
 ### Return Value
 true if purged at least one token from the line, false otherwise.
+
+
+## targum_lexer_get_lexeme
+```c
+char *targum_lexer_get_lexeme(const struct TargumLexer *lexer, const struct TargumTokenInfo *tokinfo);
+```
+
+### Description
+Gets the string lexeme from the lexer using token data.
+
+### Parameters
+* `lexer` - pointer to lexer object.
+* `tokinfo` - pointer to token object.
+
+### Return Value
+returns string data directly from the token, NULL if source text was never loaded.

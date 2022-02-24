@@ -9,7 +9,7 @@ extern "C" {
 #include "cfg/cfg.h"
 
 #define TARGUM_LEXER_VERSION_MAJOR    1
-#define TARGUM_LEXER_VERSION_MINOR    2
+#define TARGUM_LEXER_VERSION_MINOR    3
 #define TARGUM_LEXER_VERSION_PATCH    0
 #define TARGUM_LEXER_VERSION_RELEASE  "beta"
 #define STR_HELPER(x)                 #x
@@ -39,6 +39,7 @@ struct TargumTokenInfo {
 };
 
 TARGUM_API NO_NULL uint32_t targum_token_info_get_token(const struct TargumTokenInfo *tokinfo);
+TARGUM_API NO_NULL size_t   targum_token_info_get_len(const struct TargumTokenInfo *tokinfo);
 
 
 struct TargumLexer {
@@ -84,6 +85,7 @@ TARGUM_API NO_NULL bool targum_lexer_remove_comments(struct TargumLexer *lexer);
 TARGUM_API NO_NULL bool targum_lexer_remove_whitespace(struct TargumLexer *lexer);
 
 TARGUM_API NO_NULL bool targum_lexer_purge_line(struct TargumLexer *lexer, size_t line);
+TARGUM_API NO_NULL char *targum_lexer_get_lexeme(const struct TargumLexer *lexer, const struct TargumTokenInfo *tokinfo);
 
 
 #ifdef __cplusplus

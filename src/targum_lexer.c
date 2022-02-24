@@ -9,9 +9,11 @@
 #endif
 
 
-TARGUM_API uint32_t targum_token_info_get_token(const struct TargumTokenInfo *const tokinfo)
-{
+TARGUM_API uint32_t targum_token_info_get_token(const struct TargumTokenInfo *const tokinfo) {
 	return tokinfo->tag;
+}
+TARGUM_API size_t targum_token_info_get_len(const struct TargumTokenInfo *const tokinfo) {
+	return (tokinfo->end - tokinfo->start);
 }
 
 /*********************************************************************/
@@ -558,4 +560,8 @@ TARGUM_API bool targum_lexer_purge_line(struct TargumLexer *const lexer, const s
 		}
 	}
 	return deleted_something;
+}
+
+TARGUM_API char *targum_lexer_get_lexeme(const struct TargumLexer *const lexer, const struct TargumTokenInfo *const tokinfo) {
+	return( harbol_string_empty(&lexer->src) )? NULL : &lexer->src.cstr[tokinfo->start];
 }
