@@ -34,8 +34,8 @@ struct TargumLexer {
 	struct HarbolArray     tokens;
 	struct HarbolString    filename, src;
 	struct HarbolMap       *cfg;
-	char                   *iter, *line_start;
-	size_t                  line, index, err_count;
+	char                   *iter, *line_start, *curr_lexeme;
+	size_t                  line, index, err_count, curr_lexeme_len;
 	struct TargumTokenInfo *curr_tok;
 };
 ```
@@ -59,6 +59,9 @@ char pointer used to iterate the source code.
 char pointer to the start of a line in the source code.
 mostly used to determine the column of a token.
 
+### curr_lexeme
+char pointer to the starting character offset of the current pointed-to token.
+
 ### line
 current line in the source code.
 
@@ -66,7 +69,10 @@ current line in the source code.
 current index used to iterate the `tokens` array.
 
 ### err_count
-how many lexer errors have ocurred. 
+how many lexer errors have ocurred.
+
+### curr_lexeme_len
+the length of the current token's lexeme string.
 
 ### curr_tok
 token pointer as pointed to with `TargumLexer::index`.

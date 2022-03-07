@@ -93,6 +93,8 @@ TARGUM_API void targum_lexer_flush_tokens(struct TargumLexer *const lexer)
 	harbol_array_clear(&lexer->tokens);
 	lexer->index = 0;
 	lexer->curr_tok = NULL;
+	lexer->curr_lexeme = NULL;
+	lexer->curr_lexeme_len = 0;
 }
 
 TARGUM_API void targum_lexer_free(struct TargumLexer **const lexer_ref, const bool free_config)
@@ -135,6 +137,9 @@ TARGUM_API size_t targum_lexer_get_token_count(const struct TargumLexer *const l
 
 TARGUM_API struct TargumTokenInfo *targum_lexer_get_token(const struct TargumLexer *const lexer)
 {
+	if( lexer->curr_tok==NULL && lexer->tokens.len > 1 ) {
+		return targum_lexer_advance(lexer, false);
+	}
 	return lexer->curr_tok;
 }
 
@@ -150,6 +155,8 @@ TARGUM_API struct TargumTokenInfo *targum_lexer_advance(struct TargumLexer *cons
 	}
 	if( lexer->index < lexer->tokens.len ) {
 		lexer->curr_tok = harbol_array_get(&lexer->tokens, lexer->index++, sizeof *lexer->curr_tok);
+		lexer->curr_lexeme = targum_lexer_get_lexeme(lexer, lexer->curr_tok);
+		lexer->curr_lexeme_len = targum_token_info_get_len(lexer->curr_tok);
 	} else {
 		const intmax_t *const max_toks = harbol_cfg_get_int(lexer->cfg, "tokens.on demand");
 		if( max_toks != NULL && *max_toks > 0 ) {
@@ -158,6 +165,8 @@ TARGUM_API struct TargumTokenInfo *targum_lexer_advance(struct TargumLexer *cons
 			}
 			targum_lexer_generate_tokens(lexer);
 			lexer->curr_tok = harbol_array_get(&lexer->tokens, lexer->index++, sizeof *lexer->curr_tok);
+			lexer->curr_lexeme = targum_lexer_get_lexeme(lexer, lexer->curr_tok);
+			lexer->curr_lexeme_len = targum_token_info_get_len(lexer->curr_tok);
 		}
 	}
 	return lexer->curr_tok;
@@ -173,6 +182,8 @@ TARGUM_API void targum_lexer_reset_token_index(struct TargumLexer *lexer)
 {
 	lexer->index = 0;
 	lexer->curr_tok = harbol_array_get(&lexer->tokens, lexer->index++, sizeof *lexer->curr_tok);
+	lexer->curr_lexeme = targum_lexer_get_lexeme(lexer, lexer->curr_tok);
+	lexer->curr_lexeme_len = targum_token_info_get_len(lexer->curr_tok);
 }
 
 TARGUM_API bool targum_lexer_generate_tokens(struct TargumLexer *const lexer)

@@ -46,8 +46,8 @@ struct TargumLexer {
 	struct HarbolArray      tokens;
 	struct HarbolString     filename, src;
 	struct HarbolMap       *cfg;
-	char                   *iter, *line_start;
-	size_t                  line, index, err_count;
+	char                   *iter, *line_start, *curr_lexeme;
+	size_t                  line, index, err_count, curr_lexeme_len;
 	struct TargumTokenInfo *curr_tok;
 };
 
